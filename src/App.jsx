@@ -7,6 +7,9 @@ import Hobby from './components/Hobby'
 
 function App() {
   const [activeSection, setActiveSection] = useState('About Me')
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [showScrollDownHint, setShowScrollDownHint] = useState(true)
+  const [showScrollUpHint, setShowScrollUpHint] = useState(false)
   const contentRef = useRef(null)
   const scrollTimeoutRef = useRef(null)
 
@@ -25,74 +28,89 @@ function App() {
   const goToNextSection = () => {
     const next = getNextSection(activeSection)
     if (next) {
-      setActiveSection(next)
+      setIsAnimating(true)
+      setTimeout(() => {
+        setActiveSection(next)
+        setTimeout(() => setIsAnimating(false), 300)
+      }, 150)
     }
   }
 
   const goToPreviousSection = () => {
     const previous = getPreviousSection(activeSection)
     if (previous) {
-      setActiveSection(previous)
+      setIsAnimating(true)
+      setTimeout(() => {
+        setActiveSection(previous)
+        setTimeout(() => setIsAnimating(false), 300)
+      }, 150)
     }
+  }
+
+  const handleSectionChange = (newSection) => {
+    setIsAnimating(true)
+    setTimeout(() => {
+      setActiveSection(newSection)
+      setTimeout(() => setIsAnimating(false), 300)
+    }, 150)
+  }
+
+  // Update scroll hints based on scroll position
+  const updateScrollHints = () => {
+    const element = contentRef.current
+    if (!element) return
+
+    const { scrollTop, scrollHeight, clientHeight } = element
+    const maxScroll = scrollHeight - clientHeight
+    const isScrollable = maxScroll > 10
+    const hasNext = getNextSection(activeSection) !== null
+    const hasPrevious = getPreviousSection(activeSection) !== null
+
+    // Show scroll down hint if at top and (content is scrollable OR has next section)
+    setShowScrollDownHint(
+      scrollTop < 50 && (isScrollable || hasNext)
+    )
+
+    // Show scroll up hint if at bottom and has previous section
+    setShowScrollUpHint(
+      scrollTop + clientHeight >= scrollHeight - 50 && hasPrevious
+    )
   }
 
   // Reset scroll position when section changes
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0
+      // Use setTimeout to ensure DOM is updated
+      setTimeout(() => updateScrollHints(), 100)
     }
   }, [activeSection])
 
-  // Handle scroll detection
+  // Track scroll position for hints
   useEffect(() => {
-    let isTransitioning = false
-    let lastScrollTop = 0
+    const handleScrollUpdate = () => {
+      updateScrollHints()
+    }
 
-    const handleScroll = () => {
-      if (isTransitioning) return
-      
-      const element = contentRef.current
-      if (!element) return
-
-      const { scrollTop, scrollHeight, clientHeight } = element
-      const maxScroll = scrollHeight - clientHeight
-      
-      // Check if content is scrollable
-      if (maxScroll <= 10) return
-
-      const scrollDirection = scrollTop > lastScrollTop ? 'down' : 'up'
-      lastScrollTop = scrollTop
-
-      // Scroll down - at bottom
-      if (scrollTop + clientHeight >= scrollHeight - 5) {
-        const next = getNextSection(activeSection)
-        if (next) {
-          isTransitioning = true
-          setActiveSection(next)
-          setTimeout(() => {
-            isTransitioning = false
-            if (contentRef.current) {
-              lastScrollTop = 0
-            }
-          }, 600)
-        }
-      }
-      // Scroll up - at top
-      else if (scrollTop <= 5 && scrollDirection === 'up') {
-        const previous = getPreviousSection(activeSection)
-        if (previous) {
-          isTransitioning = true
-          setActiveSection(previous)
-          setTimeout(() => {
-            isTransitioning = false
-            if (contentRef.current) {
-              contentRef.current.scrollTop = contentRef.current.scrollHeight
-              lastScrollTop = contentRef.current.scrollHeight
-            }
-          }, 100)
-        }
+    const contentElement = contentRef.current
+    if (contentElement) {
+      contentElement.addEventListener('scroll', handleScrollUpdate, { passive: true })
+      // Initial check after a short delay
+      setTimeout(() => updateScrollHints(), 100)
+      return () => {
+        contentElement.removeEventListener('scroll', handleScrollUpdate)
       }
     }
+  }, [activeSection])
+
+  // Handle scroll detection - only trigger on deliberate wheel scrolling past boundaries
+  useEffect(() => {
+    let isTransitioning = false
+    let scrollAccumulator = 0
+    let lastWheelTime = 0
+    let lastScrollDirection = null // Track last scroll direction
+    const SCROLL_THRESHOLD = 80 // Require 80px of scroll delta to trigger (easier to scroll)
+    const WHEEL_TIMEOUT = 300 // Reset accumulator if no wheel event for 300ms
 
     const handleWheel = (e) => {
       const element = contentRef.current
@@ -100,51 +118,116 @@ function App() {
 
       const { scrollTop, scrollHeight, clientHeight } = element
       const maxScroll = scrollHeight - clientHeight
+      const isContentScrollable = maxScroll > 10
       
-      if (maxScroll <= 10) return
+      const now = Date.now()
+      // More lenient boundary detection - allow 10px margin
+      const isAtBottom = isContentScrollable ? (scrollTop + clientHeight >= scrollHeight - 10) : true
+      const isAtTop = isContentScrollable ? (scrollTop <= 10) : true
 
-      // Scrolling down and at bottom
-      if (e.deltaY > 0 && scrollTop + clientHeight >= scrollHeight - 5) {
-        e.preventDefault()
-        const next = getNextSection(activeSection)
-        if (next) {
-          isTransitioning = true
-          setActiveSection(next)
-          setTimeout(() => {
-            isTransitioning = false
-            if (contentRef.current) {
-              lastScrollTop = 0
+      // Scrolling down - check if we should go to next section
+      if (e.deltaY > 0) {
+        // If content is scrollable, only trigger when at bottom
+        // If content is not scrollable, always allow scrolling down to next section
+        if (isAtBottom) {
+          // Reset accumulator if too much time passed or scrolling direction changed
+          if (now - lastWheelTime > WHEEL_TIMEOUT || lastScrollDirection === 'up') {
+            scrollAccumulator = 0
+          }
+          
+          scrollAccumulator += e.deltaY
+          lastWheelTime = now
+          lastScrollDirection = 'down'
+
+          // Only prevent default and switch section if threshold is reached
+          if (scrollAccumulator >= SCROLL_THRESHOLD) {
+            e.preventDefault()
+            const next = getNextSection(activeSection)
+            if (next) {
+              scrollAccumulator = 0
+              isTransitioning = true
+              setIsAnimating(true)
+              setTimeout(() => {
+                setActiveSection(next)
+                setTimeout(() => {
+                  isTransitioning = false
+                  setIsAnimating(false)
+                }, 300)
+              }, 150)
+            } else {
+              // No next section, don't prevent default
+              scrollAccumulator = 0
             }
-          }, 600)
+          } else {
+            // Prevent default to show resistance, but don't switch yet
+            e.preventDefault()
+          }
+        } else if (isContentScrollable) {
+          // Normal scrolling within content - reset accumulator
+          scrollAccumulator = 0
+          lastWheelTime = 0
+          lastScrollDirection = null
         }
       }
-      // Scrolling up and at top
-      else if (e.deltaY < 0 && scrollTop <= 5) {
-        e.preventDefault()
-        const previous = getPreviousSection(activeSection)
-        if (previous) {
-          isTransitioning = true
-          setActiveSection(previous)
-          setTimeout(() => {
-            isTransitioning = false
-            if (contentRef.current) {
-              contentRef.current.scrollTop = contentRef.current.scrollHeight
-              lastScrollTop = contentRef.current.scrollHeight
+      // Scrolling up - check if we should go to previous section
+      else if (e.deltaY < 0) {
+        // If content is scrollable, trigger when at or near top
+        // If content is not scrollable, always allow scrolling up to previous section
+        if (isAtTop) {
+          // Reset accumulator if too much time passed or scrolling direction changed
+          if (now - lastWheelTime > WHEEL_TIMEOUT || lastScrollDirection === 'down') {
+            scrollAccumulator = 0
+          }
+          
+          // Use absolute value to accumulate upward scroll the same way as downward
+          scrollAccumulator += Math.abs(e.deltaY)
+          lastWheelTime = now
+          lastScrollDirection = 'up'
+
+          // Only prevent default and switch section if threshold is reached
+          if (scrollAccumulator >= SCROLL_THRESHOLD) {
+            e.preventDefault()
+            const previous = getPreviousSection(activeSection)
+            if (previous) {
+              scrollAccumulator = 0
+              isTransitioning = true
+              setIsAnimating(true)
+              setTimeout(() => {
+                setActiveSection(previous)
+                setTimeout(() => {
+                  isTransitioning = false
+                  setIsAnimating(false)
+                  // Set scroll to bottom of previous section if it's scrollable
+                  if (contentRef.current) {
+                    const prevElement = contentRef.current
+                    const prevMaxScroll = prevElement.scrollHeight - prevElement.clientHeight
+                    if (prevMaxScroll > 10) {
+                      prevElement.scrollTop = prevElement.scrollHeight
+                    }
+                  }
+                }, 300)
+              }, 150)
+            } else {
+              // No previous section, don't prevent default
+              scrollAccumulator = 0
             }
-          }, 100)
+          } else {
+            // Prevent default to show resistance, but don't switch yet
+            e.preventDefault()
+          }
+        } else if (isContentScrollable) {
+          // Normal scrolling within content - reset accumulator
+          scrollAccumulator = 0
+          lastWheelTime = 0
+          lastScrollDirection = null
         }
       }
     }
 
     const contentElement = contentRef.current
     if (contentElement) {
-      // Reset lastScrollTop when section changes
-      lastScrollTop = contentElement.scrollTop
-      
-      contentElement.addEventListener('scroll', handleScroll, { passive: true })
       contentElement.addEventListener('wheel', handleWheel, { passive: false })
       return () => {
-        contentElement.removeEventListener('scroll', handleScroll)
         contentElement.removeEventListener('wheel', handleWheel)
       }
     }
@@ -154,7 +237,7 @@ function App() {
     <span key={section}>
       <button
         className={`breadcrumb-item ${activeSection === section ? 'active' : ''}`}
-        onClick={() => setActiveSection(section)}
+        onClick={() => handleSectionChange(section)}
       >
         {section}
       </button>
@@ -188,9 +271,21 @@ function App() {
       </header>
       
       <main className="main-content" ref={contentRef}>
-        <div className="content-section">
+        {showScrollUpHint && (
+          <div className="scroll-hint scroll-hint-top">
+            <div className="scroll-hint-icon">↑</div>
+            <span className="scroll-hint-text">Scroll up for previous</span>
+          </div>
+        )}
+        <div className={`content-section ${isAnimating ? 'fade-out' : 'fade-in'}`}>
           {renderSection()}
         </div>
+        {showScrollDownHint && (
+          <div className="scroll-hint scroll-hint-bottom">
+            <div className="scroll-hint-icon">↓</div>
+            <span className="scroll-hint-text">Scroll down for next</span>
+          </div>
+        )}
       </main>
     </div>
   )

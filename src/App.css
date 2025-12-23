@@ -78,6 +78,7 @@
   max-height: calc(100vh - 250px);
   overflow-y: auto;
   scroll-behavior: smooth;
+  position: relative;
 }
 
 .content-section h2 {
@@ -93,6 +94,43 @@
   color: #000000;
   line-height: 1.8;
   margin-bottom: 1rem;
+}
+
+/* Section Transition Animations */
+.content-section {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.content-section.fade-in {
+  animation: fadeInSlide 0.3s ease forwards;
+}
+
+.content-section.fade-out {
+  animation: fadeOutSlide 0.15s ease forwards;
+}
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutSlide {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
 }
 
 /* About Me Styles */
@@ -204,6 +242,96 @@
 .next-section-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(252, 76, 2, 0.3);
+}
+
+/* Scroll Hints */
+.scroll-hint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 10;
+  pointer-events: none;
+  animation: fadeInOut 2s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+.scroll-hint-top {
+  top: 1rem;
+}
+
+.scroll-hint-bottom {
+  bottom: 1rem;
+}
+
+.scroll-hint-icon {
+  font-size: 1.5rem;
+  color: #FC4C02;
+  animation: bounce 1.5s ease-in-out infinite;
+  font-weight: 300;
+}
+
+.scroll-hint-text {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+/* Gradient overlays for scroll hints */
+.main-content::before,
+.main-content::after {
+  content: '';
+  position: sticky;
+  left: 0;
+  right: 0;
+  height: 60px;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.3s ease;
+}
+
+.main-content::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+  opacity: 0;
+}
+
+.main-content::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+  opacity: 0;
+}
+
+.main-content.scrollable-top::before {
+  opacity: 1;
+}
+
+.main-content.scrollable-bottom::after {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
