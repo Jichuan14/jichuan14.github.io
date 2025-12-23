@@ -1,4 +1,4 @@
-function Education() {
+function Education({ onNext, hasNext }) {
   return (
     <div className="education">
       <h2>Education</h2>
@@ -21,6 +21,11 @@ function Education() {
           and participated in several coding competitions.
         </p>
       </div>
+      {hasNext && (
+        <button className="next-section-btn" onClick={onNext}>
+          Next: Projects →
+        </button>
+      )}
     </div>
   )
 }

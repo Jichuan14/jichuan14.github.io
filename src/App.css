@@ -75,6 +75,9 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin-bottom: 2rem;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 .content-section h2 {
@@ -89,6 +92,118 @@
   font-size: 1.1rem;
   color: #000000;
   line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+/* About Me Styles */
+.about-me p {
+  margin-bottom: 1.5rem;
+}
+
+/* Education Styles */
+.education-item {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.education-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.education-item h3 {
+  font-size: 1.5rem;
+  color: #000000;
+  margin-bottom: 0.5rem;
+}
+
+.degree {
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.3rem;
+}
+
+.period {
+  color: #666;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+/* Projects Styles */
+.project-item {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.project-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.project-item h3 {
+  font-size: 1.5rem;
+  color: #000000;
+  margin-bottom: 0.8rem;
+}
+
+.project-description {
+  margin-bottom: 0.8rem;
+}
+
+.project-tech {
+  color: #666;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+/* Hobby Styles */
+.hobby-item {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.hobby-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.hobby-item h3 {
+  font-size: 1.5rem;
+  color: #000000;
+  margin-bottom: 0.8rem;
+}
+
+/* Next Section Button */
+.next-section-btn {
+  display: block;
+  margin: 2.5rem auto 0;
+  padding: 1rem 2.5rem;
+  background: #FC4C02;
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(252, 76, 2, 0.3);
+}
+
+.next-section-btn:hover {
+  background: #E94E1B;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(252, 76, 2, 0.4);
+}
+
+.next-section-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(252, 76, 2, 0.3);
 }
 
 @media (max-width: 768px) {
@@ -108,9 +223,15 @@
   .main-content {
     padding: 2rem 1.5rem;
     margin: 0 1rem 2rem 1rem;
+    max-height: calc(100vh - 200px);
   }
   
   .content-section h2 {
     font-size: 2rem;
+  }
+
+  .next-section-btn {
+    padding: 0.8rem 2rem;
+    font-size: 0.9rem;
   }
 }
