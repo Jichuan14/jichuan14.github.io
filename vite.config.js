@@ -8,4 +8,9 @@ export default defineConfig({
       jsxRuntime: 'automatic',
     }),
   ],
+  base: '/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+  },
 })
