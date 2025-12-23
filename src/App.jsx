@@ -8,8 +8,6 @@ import Hobby from './components/Hobby'
 function App() {
   const [activeSection, setActiveSection] = useState('About Me')
   const [isAnimating, setIsAnimating] = useState(false)
-  const [showScrollDownHint, setShowScrollDownHint] = useState(true)
-  const [showScrollUpHint, setShowScrollUpHint] = useState(false)
   const contentRef = useRef(null)
   const scrollTimeoutRef = useRef(null)
 
@@ -55,51 +53,10 @@ function App() {
     }, 150)
   }
 
-  // Update scroll hints based on scroll position
-  const updateScrollHints = () => {
-    const element = contentRef.current
-    if (!element) return
-
-    const { scrollTop, scrollHeight, clientHeight } = element
-    const maxScroll = scrollHeight - clientHeight
-    const isScrollable = maxScroll > 10
-    const hasNext = getNextSection(activeSection) !== null
-    const hasPrevious = getPreviousSection(activeSection) !== null
-
-    // Show scroll down hint if at top and (content is scrollable OR has next section)
-    setShowScrollDownHint(
-      scrollTop < 50 && (isScrollable || hasNext)
-    )
-
-    // Show scroll up hint if at bottom and has previous section
-    setShowScrollUpHint(
-      scrollTop + clientHeight >= scrollHeight - 50 && hasPrevious
-    )
-  }
-
   // Reset scroll position when section changes
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0
-      // Use setTimeout to ensure DOM is updated
-      setTimeout(() => updateScrollHints(), 100)
-    }
-  }, [activeSection])
-
-  // Track scroll position for hints
-  useEffect(() => {
-    const handleScrollUpdate = () => {
-      updateScrollHints()
-    }
-
-    const contentElement = contentRef.current
-    if (contentElement) {
-      contentElement.addEventListener('scroll', handleScrollUpdate, { passive: true })
-      // Initial check after a short delay
-      setTimeout(() => updateScrollHints(), 100)
-      return () => {
-        contentElement.removeEventListener('scroll', handleScrollUpdate)
-      }
     }
   }, [activeSection])
 
@@ -270,23 +227,23 @@ function App() {
         <h1 className="name">Jichuan Wu</h1>
       </header>
       
-      <main className="main-content" ref={contentRef}>
-        {showScrollUpHint && (
-          <div className="scroll-hint scroll-hint-top">
-            <div className="scroll-hint-icon">↑</div>
-            <span className="scroll-hint-text">Scroll up for previous</span>
+      <div className="content-wrapper">
+        <main className="main-content" ref={contentRef}>
+          <div className={`content-section ${isAnimating ? 'fade-out' : 'fade-in'}`}>
+            {renderSection()}
           </div>
-        )}
-        <div className={`content-section ${isAnimating ? 'fade-out' : 'fade-in'}`}>
-          {renderSection()}
+        </main>
+        <div className="section-indicator">
+          {sections.map((section, index) => (
+            <div
+              key={section}
+              className={`indicator-square ${activeSection === section ? 'active' : ''}`}
+              onClick={() => handleSectionChange(section)}
+              title={section}
+            />
+          ))}
         </div>
-        {showScrollDownHint && (
-          <div className="scroll-hint scroll-hint-bottom">
-            <div className="scroll-hint-icon">↓</div>
-            <span className="scroll-hint-text">Scroll down for next</span>
-          </div>
-        )}
-      </main>
+      </div>
     </div>
   )
 }
