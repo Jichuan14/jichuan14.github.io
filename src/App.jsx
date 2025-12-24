@@ -387,31 +387,59 @@ function App() {
     const MIN_SWIPE_SPEED = 0.4 // Minimum pixels per ms for a valid swipe
 
     const handleTouchStart = (e) => {
-      if (isTransitioning) return
-      touchStartTarget = e.target
+      if (isTransitioning || pendingSectionChange) return
+      
+      // Check if touch started inside the main content area
+      const target = e.target
+      if (contentRef.current && contentRef.current.contains(target)) {
+        // Touch started inside content area - allow normal scrolling, don't track for section changes
+        touchStartTarget = null
+        return
+      }
+      
+      touchStartTarget = target
       touchStartY = e.touches[0].clientY
       touchStartTime = Date.now()
       touchAccumulator = 0
     }
 
     const handleTouchMove = (e) => {
-      // Don't prevent default - let native scrolling work
-      if (isTransitioning) return
+      // Always allow native scrolling - never prevent default
+      if (isTransitioning || pendingSectionChange) return
+      
+      // If touch started inside content area, don't interfere at all
+      if (!touchStartTarget || (contentRef.current && contentRef.current.contains(e.target))) {
+        return
+      }
     }
 
     const handleTouchEnd = (e) => {
-      if (isTransitioning) return
+      if (isTransitioning || pendingSectionChange) {
+        touchStartY = 0
+        touchEndY = 0
+        touchStartTarget = null
+        return
+      }
       
       const now = Date.now()
       if (now - lastSectionChangeTime < TOUCH_COOLDOWN) {
         touchStartY = 0
         touchEndY = 0
+        touchStartTarget = null
         return
       }
 
       // If the touch started inside the main content area, do NOT change sections.
       // Allow scrolling within the current section only.
-      if (contentRef.current && touchStartTarget && contentRef.current.contains(touchStartTarget)) {
+      if (!touchStartTarget || (contentRef.current && contentRef.current.contains(e.target))) {
+        touchStartY = 0
+        touchEndY = 0
+        touchStartTarget = null
+        return
+      }
+      
+      // Also check if current touch target is inside content area
+      if (contentRef.current && contentRef.current.contains(e.target)) {
         touchStartY = 0
         touchEndY = 0
         touchStartTarget = null
