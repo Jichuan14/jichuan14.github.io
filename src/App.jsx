@@ -617,6 +617,41 @@ function App() {
           <div className={`content-section ${isAnimating ? 'fade-out' : 'fade-in'}`}>
             {renderSection()}
           </div>
+          <footer className="social-footer">
+            <span className="social-label">Connect with me:</span>
+            <a
+              href="https://www.linkedin.com/in/jichuanwu/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-link"
+              aria-label="LinkedIn profile"
+            >
+              <svg
+                className="social-icon linkedin-icon"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.32 8.16H4.7V24H.32V8.16zM8.55 8.16h4.18v2.15h.06c.58-1.1 2-2.26 4.11-2.26 4.4 0 5.21 2.9 5.21 6.67V24h-4.38v-8.1c0-1.93-.03-4.41-2.69-4.41-2.69 0-3.1 2.1-3.1 4.27V24H8.55V8.16z" />
+              </svg>
+            </a>
+            <a
+              href="https://www.instagram.com/jichuan.14/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-link"
+              aria-label="Instagram profile"
+            >
+              <svg
+                className="social-icon instagram-icon"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.9.3 2.3.5.6.2 1 .5 1.5 1 .5.5.8.9 1 1.5.2.4.4 1.1.5 2.3.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.9-.5 2.3-.2.6-.5 1-1 1.5-.5.5-.9.8-1.5 1-.4.2-1.1.4-2.3.5-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.9-.3-2.3-.5-.6-.2-1-.5-1.5-1-.5-.5-.8-.9-1-1.5-.2-.4-.4-1.1-.5-2.3C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.9.5-2.3.2-.6.5-1 1-1.5.5-.5.9-.8 1.5-1 .4-.2 1.1-.4 2.3-.5C8.4 2.2 8.8 2.2 12 2.2m0-2.2C8.7 0 8.3 0 7 .1 5.7.2 4.8.4 4 .7c-.8.3-1.5.7-2.2 1.4C1.1 3 0.7 3.7.4 4.5c-.3.8-.5 1.7-.6 3C-.3 8.8-.3 9.3-.3 12s0 3.2.1 4.5c.1 1.3.3 2.2.6 3 .3.8.7 1.5 1.4 2.2.7.7 1.4 1.1 2.2 1.4.8.3 1.7.5 3 .6 1.3.1 1.8.1 4.5.1s3.2 0 4.5-.1c1.3-.1 2.2-.3 3-.6.8-.3 1.5-.7 2.2-1.4.7-.7 1.1-1.4 1.4-2.2.3-.8.5-1.7.6-3 .1-1.3.1-1.8.1-4.5s0-3.2-.1-4.5c-.1-1.3-.3-2.2-.6-3-.3-.8-.7-1.5-1.4-2.2C21.7.7 21 .3 20.2 0c-.8-.3-1.7-.5-3-.6C15.2-.3 14.7-.3 12-.3z" />
+                <path d="M12 5.8A6.2 6.2 0 1 0 18.2 12 6.2 6.2 0 0 0 12 5.8zm0 10.2A4 4 0 1 1 16 12a4 4 0 0 1-4 4z" />
+                <circle cx="18.4" cy="5.6" r="1.4" />
+              </svg>
+            </a>
+          </footer>
         </main>
         <div className="section-indicator">
           {sections.map((section, index) => (
