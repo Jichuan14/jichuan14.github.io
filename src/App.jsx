@@ -66,18 +66,25 @@ function App() {
     let scrollAccumulator = 0
     let lastWheelTime = 0
     let lastScrollDirection = null // Track last scroll direction
-    const SCROLL_THRESHOLD = 80 // Require 80px of scroll delta to trigger (easier to scroll)
+    let lastSectionChangeTime = 0 // Track when last section change occurred
+    const SCROLL_THRESHOLD = 120 // Require 120px of scroll delta to trigger (less sensitive)
     const WHEEL_TIMEOUT = 300 // Reset accumulator if no wheel event for 300ms
+    const SECTION_CHANGE_COOLDOWN = 500 // Minimum time between section changes (ms)
 
     const handleWheel = (e) => {
       const element = contentRef.current
       if (!element || isTransitioning) return
 
+      const now = Date.now()
+      // Prevent rapid section changes - require cooldown period
+      if (now - lastSectionChangeTime < SECTION_CHANGE_COOLDOWN) {
+        return
+      }
+
       const { scrollTop, scrollHeight, clientHeight } = element
       const maxScroll = scrollHeight - clientHeight
       const isContentScrollable = maxScroll > 10
       
-      const now = Date.now()
       // More lenient boundary detection - allow 10px margin
       const isAtBottom = isContentScrollable ? (scrollTop + clientHeight >= scrollHeight - 10) : true
       const isAtTop = isContentScrollable ? (scrollTop <= 10) : true
@@ -101,7 +108,11 @@ function App() {
             e.preventDefault()
             const next = getNextSection(activeSection)
             if (next) {
+              // Reset everything for next scroll action
               scrollAccumulator = 0
+              lastWheelTime = 0
+              lastScrollDirection = null
+              lastSectionChangeTime = now
               isTransitioning = true
               setIsAnimating(true)
               setTimeout(() => {
@@ -146,7 +157,11 @@ function App() {
             e.preventDefault()
             const previous = getPreviousSection(activeSection)
             if (previous) {
+              // Reset everything for next scroll action
               scrollAccumulator = 0
+              lastWheelTime = 0
+              lastScrollDirection = null
+              lastSectionChangeTime = now
               isTransitioning = true
               setIsAnimating(true)
               setTimeout(() => {

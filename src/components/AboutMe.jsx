@@ -3,16 +3,17 @@ function AboutMe({ onNext, hasNext }) {
     <div className="about-me">
       <h2>About Me</h2>
       <p>
-        Hello! I'm Jichuan Wu, a passionate individual with a keen interest in technology and innovation. 
-        I enjoy exploring new ideas and solving complex problems through creative thinking and collaboration.
+        I graduated from Rensselaer Polytechnic Institute in December 2024 with a degree in Information Technology and Web Science 
+        (a program ranked #1 nationwide by College Choice in 2017).
       </p>
       <p>
-        My journey has been shaped by curiosity and a drive to continuously learn and grow. 
-        I believe in the power of persistence and the importance of staying adaptable in an ever-changing world.
+        I am currently earning a Master of Data Science from the University of California, Irvine. I'm interested in data science, machine learning, and artificial intelligence.
       </p>
       <p>
-        When I'm not working on projects, you can find me engaging with various communities, 
-        sharing knowledge, and always looking for the next exciting challenge to tackle.
+        My technical expertise spans the entire web stack—including front-end design and back-end database deployment—alongside 
+        advanced proficiency in algorithms, AI, and Deep Learning. I bridge the gap between theory and practice through rigorous 
+        team projects and research internships, where I have demonstrated strong leadership and collaboration skills while working 
+        with diverse stakeholders.
       </p>
       {hasNext && (
         <button className="next-section-btn" onClick={onNext}>
