@@ -59,6 +59,10 @@ function App() {
 
   // Handle welcome page scroll detection
   useEffect(() => {
+    let touchStartY = 0
+    let touchEndY = 0
+    let swipeThreshold = 50
+
     const handleWelcomeScroll = (e) => {
       if (!showWelcome || !welcomeRef.current) return
 
@@ -108,13 +112,47 @@ function App() {
       // No need to prevent default, let it scroll normally
     }
 
+    const handleTouchStart = (e) => {
+      if (!showWelcome) return
+      touchStartY = e.touches[0].clientY
+    }
+
+    const handleTouchEnd = (e) => {
+      if (!showWelcome || !welcomeRef.current) return
+      touchEndY = e.changedTouches[0].clientY
+      const swipeDistance = touchStartY - touchEndY
+
+      const element = welcomeRef.current
+      const { scrollTop, scrollHeight, clientHeight } = element
+      const maxScroll = scrollHeight - clientHeight
+
+      // Swipe down (scrolling down) at bottom
+      if (swipeDistance < -swipeThreshold && (maxScroll <= 10 || scrollTop + clientHeight >= scrollHeight - 10)) {
+        setPageTransition('leaving')
+        setTimeout(() => {
+          setShowWelcome(false)
+          setPageTransition('entering')
+          setTimeout(() => {
+            setPageTransition(null)
+            if (contentRef.current) {
+              contentRef.current.scrollTop = 0
+            }
+          }, 400)
+        }, 200)
+      }
+    }
+
     if (showWelcome && welcomeRef.current) {
       const welcomeElement = welcomeRef.current
       welcomeElement.addEventListener('scroll', handleWelcomeScroll, { passive: true })
       welcomeElement.addEventListener('wheel', handleWelcomeWheel, { passive: false })
+      welcomeElement.addEventListener('touchstart', handleTouchStart, { passive: true })
+      welcomeElement.addEventListener('touchend', handleTouchEnd, { passive: true })
       return () => {
         welcomeElement.removeEventListener('scroll', handleWelcomeScroll)
         welcomeElement.removeEventListener('wheel', handleWelcomeWheel)
+        welcomeElement.removeEventListener('touchstart', handleTouchStart)
+        welcomeElement.removeEventListener('touchend', handleTouchEnd)
       }
     }
   }, [showWelcome])
@@ -136,16 +174,29 @@ function App() {
     let lastWheelTime = 0
     let lastScrollDirection = null // Track last scroll direction
     let lastSectionChangeTime = 0 // Track when last section change occurred
-    const SCROLL_THRESHOLD = 120 // Require 120px of scroll delta to trigger (less sensitive)
-    const WHEEL_TIMEOUT = 300 // Reset accumulator if no wheel event for 300ms
-    const SECTION_CHANGE_COOLDOWN = 500 // Minimum time between section changes (ms)
+    let pendingSectionChange = false // Flag to prevent multiple rapid triggers
+    const SCROLL_THRESHOLD = 250 // Require 250px of scroll delta to trigger (less sensitive)
+    const WHEEL_TIMEOUT = 400 // Reset accumulator if no wheel event for 400ms
+    const SECTION_CHANGE_COOLDOWN = 1000 // Minimum time between section changes (ms)
 
     const handleWheel = (e) => {
-      if (isTransitioning) return
-
       const now = Date.now()
-      // Prevent rapid section changes - require cooldown period
+
+      // If the scroll started inside the main content area, do NOT change sections.
+      // Let the user freely scroll within the section only.
+      if (contentRef.current && contentRef.current.contains(e.target)) {
+        return
+      }
+
+      // Prevent rapid section changes - check cooldown FIRST
       if (now - lastSectionChangeTime < SECTION_CHANGE_COOLDOWN) {
+        e.preventDefault()
+        return
+      }
+      
+      // If already transitioning or pending a change, ignore all input
+      if (isTransitioning || pendingSectionChange) {
+        e.preventDefault()
         return
       }
 
@@ -171,6 +222,10 @@ function App() {
           }
           
           scrollAccumulator += e.deltaY
+          // Cap accumulator to prevent rapid multiple triggers
+          if (scrollAccumulator > SCROLL_THRESHOLD * 1.5) {
+            scrollAccumulator = SCROLL_THRESHOLD * 1.5
+          }
           lastWheelTime = now
           lastScrollDirection = 'down'
 
@@ -179,12 +234,14 @@ function App() {
             e.preventDefault()
             const next = getNextSection(activeSection)
             if (next) {
-              // Reset everything for next scroll action
+              // IMMEDIATELY lock to prevent any further processing
+              pendingSectionChange = true
+              isTransitioning = true
               scrollAccumulator = 0
               lastWheelTime = 0
               lastScrollDirection = null
               lastSectionChangeTime = now
-              isTransitioning = true
+              
               setIsAnimating(true)
               window.scrollTo({ top: 0, behavior: 'smooth' })
               setTimeout(() => {
@@ -192,6 +249,7 @@ function App() {
                 setTimeout(() => {
                   isTransitioning = false
                   setIsAnimating(false)
+                  pendingSectionChange = false
                 }, 300)
               }, 150)
             } else {
@@ -221,17 +279,24 @@ function App() {
             }
             
             scrollAccumulator += Math.abs(e.deltaY)
+            // Cap accumulator to prevent rapid multiple triggers
+            if (scrollAccumulator > SCROLL_THRESHOLD * 1.5) {
+              scrollAccumulator = SCROLL_THRESHOLD * 1.5
+            }
             lastWheelTime = now
             lastScrollDirection = 'up'
 
             // If threshold reached, go back to welcome page
             if (scrollAccumulator >= SCROLL_THRESHOLD) {
               e.preventDefault()
+              // IMMEDIATELY lock to prevent any further processing
+              pendingSectionChange = true
+              isTransitioning = true
               scrollAccumulator = 0
               lastWheelTime = 0
               lastScrollDirection = null
               lastSectionChangeTime = now
-              isTransitioning = true
+              
               setPageTransition('leaving')
               setTimeout(() => {
                 setShowWelcome(true)
@@ -240,6 +305,7 @@ function App() {
                 setTimeout(() => {
                   isTransitioning = false
                   setPageTransition(null)
+                  pendingSectionChange = false
                   // Reset welcome page scroll position
                   if (welcomeRef.current) {
                     welcomeRef.current.scrollTop = 0
@@ -259,6 +325,10 @@ function App() {
             
             // Use absolute value to accumulate upward scroll the same way as downward
             scrollAccumulator += Math.abs(e.deltaY)
+            // Cap accumulator to prevent rapid multiple triggers
+            if (scrollAccumulator > SCROLL_THRESHOLD * 1.5) {
+              scrollAccumulator = SCROLL_THRESHOLD * 1.5
+            }
             lastWheelTime = now
             lastScrollDirection = 'up'
 
@@ -267,12 +337,14 @@ function App() {
               e.preventDefault()
               const previous = getPreviousSection(activeSection)
               if (previous) {
-                // Reset everything for next scroll action
+                // IMMEDIATELY lock to prevent any further processing
+                pendingSectionChange = true
+                isTransitioning = true
                 scrollAccumulator = 0
                 lastWheelTime = 0
                 lastScrollDirection = null
                 lastSectionChangeTime = now
-                isTransitioning = true
+                
                 setIsAnimating(true)
                 window.scrollTo({ top: 0, behavior: 'smooth' })
                 setTimeout(() => {
@@ -280,6 +352,7 @@ function App() {
                   setTimeout(() => {
                     isTransitioning = false
                     setIsAnimating(false)
+                    pendingSectionChange = false
                   }, 300)
                 }, 150)
               } else {
@@ -300,11 +373,170 @@ function App() {
       }
     }
 
+    // Touch handlers for mobile - detect swipe gestures at scroll boundaries
+    let touchStartY = 0
+    let touchEndY = 0
+    let touchStartTime = 0
+    let touchAccumulator = 0
+    let lastTouchTime = 0
+    let lastTouchDirection = null
+    let touchStartTarget = null
+    const TOUCH_THRESHOLD = 150 // Swipe distance threshold (pixels)
+    const TOUCH_TIMEOUT = 400 // Reset accumulator if no touch event for 400ms
+    const TOUCH_COOLDOWN = 800 // Minimum time between section changes (ms)
+    const MIN_SWIPE_SPEED = 0.4 // Minimum pixels per ms for a valid swipe
+
+    const handleTouchStart = (e) => {
+      if (isTransitioning) return
+      touchStartTarget = e.target
+      touchStartY = e.touches[0].clientY
+      touchStartTime = Date.now()
+      touchAccumulator = 0
+    }
+
+    const handleTouchMove = (e) => {
+      // Don't prevent default - let native scrolling work
+      if (isTransitioning) return
+    }
+
+    const handleTouchEnd = (e) => {
+      if (isTransitioning) return
+      
+      const now = Date.now()
+      if (now - lastSectionChangeTime < TOUCH_COOLDOWN) {
+        touchStartY = 0
+        touchEndY = 0
+        return
+      }
+
+      // If the touch started inside the main content area, do NOT change sections.
+      // Allow scrolling within the current section only.
+      if (contentRef.current && touchStartTarget && contentRef.current.contains(touchStartTarget)) {
+        touchStartY = 0
+        touchEndY = 0
+        touchStartTarget = null
+        return
+      }
+
+      touchEndY = e.changedTouches[0].clientY
+      const swipeDistance = touchStartY - touchEndY
+      const swipeTime = now - touchStartTime
+      const swipeSpeed = Math.abs(swipeDistance) / swipeTime
+
+      // Only process if it's a fast enough swipe
+      if (swipeSpeed < MIN_SWIPE_SPEED && Math.abs(swipeDistance) < TOUCH_THRESHOLD) {
+        touchStartY = 0
+        touchEndY = 0
+        return
+      }
+
+      // Check page-level scroll position
+      const scrollY = window.scrollY
+      const windowHeight = window.innerHeight
+      const documentHeight = document.documentElement.scrollHeight
+      const maxScroll = documentHeight - windowHeight
+      const isPageScrollable = maxScroll > 10
+      
+      const isAtBottom = isPageScrollable ? (scrollY + windowHeight >= documentHeight - 10) : true
+      const isAtTop = scrollY <= 10
+
+      // Swipe down (scrolling down) - go to next section
+      if (swipeDistance < -TOUCH_THRESHOLD && isAtBottom) {
+        if (now - lastTouchTime > TOUCH_TIMEOUT || lastTouchDirection === 'up') {
+          touchAccumulator = 0
+        }
+        touchAccumulator += Math.abs(swipeDistance)
+        lastTouchTime = now
+        lastTouchDirection = 'down'
+        
+        if (touchAccumulator >= TOUCH_THRESHOLD) {
+          const next = getNextSection(activeSection)
+          if (next) {
+            touchAccumulator = 0
+            lastTouchTime = 0
+            lastTouchDirection = null
+            lastSectionChangeTime = now
+            isTransitioning = true
+            setIsAnimating(true)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            setTimeout(() => {
+              setActiveSection(next)
+              setTimeout(() => {
+                isTransitioning = false
+                setIsAnimating(false)
+              }, 300)
+            }, 150)
+          }
+        }
+      }
+      // Swipe up (scrolling up) - go to previous section or welcome
+      else if (swipeDistance > TOUCH_THRESHOLD && isAtTop) {
+        if (now - lastTouchTime > TOUCH_TIMEOUT || lastTouchDirection === 'down') {
+          touchAccumulator = 0
+        }
+        touchAccumulator += Math.abs(swipeDistance)
+        lastTouchTime = now
+        lastTouchDirection = 'up'
+        
+        if (touchAccumulator >= TOUCH_THRESHOLD) {
+          if (activeSection === 'About Me') {
+            touchAccumulator = 0
+            lastTouchTime = 0
+            lastTouchDirection = null
+            lastSectionChangeTime = now
+            isTransitioning = true
+            setPageTransition('leaving')
+            setTimeout(() => {
+              setShowWelcome(true)
+              setPageTransition('entering')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+              setTimeout(() => {
+                isTransitioning = false
+                setPageTransition(null)
+                if (welcomeRef.current) {
+                  welcomeRef.current.scrollTop = 0
+                }
+              }, 400)
+            }, 200)
+          } else {
+            const previous = getPreviousSection(activeSection)
+            if (previous) {
+              touchAccumulator = 0
+              lastTouchTime = 0
+              lastTouchDirection = null
+              lastSectionChangeTime = now
+              isTransitioning = true
+              setIsAnimating(true)
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+              setTimeout(() => {
+                setActiveSection(previous)
+                setTimeout(() => {
+                  isTransitioning = false
+                  setIsAnimating(false)
+                }, 300)
+              }, 150)
+            }
+          }
+        }
+      }
+      
+      touchStartY = 0
+      touchEndY = 0
+      touchAccumulator = 0
+      touchStartTarget = null
+    }
+
     window.addEventListener('wheel', handleWheel, { passive: false })
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+    window.addEventListener('touchend', handleTouchEnd, { passive: true })
     return () => {
       window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
+      window.removeEventListener('touchend', handleTouchEnd)
     }
-  }, [activeSection, showWelcome])
+  }, [activeSection, showWelcome, getNextSection, getPreviousSection])
 
   const breadcrumbItems = sections.map((section, index) => (
     <span key={section}>

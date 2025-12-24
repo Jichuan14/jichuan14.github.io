@@ -3,32 +3,17 @@ function Hobby({ onNext, hasNext }) {
     <div className="hobby">
       <h2>Hobby</h2>
       <div className="hobby-item">
-        <h3>Photography</h3>
+        <h3>Road Cycling</h3>
         <p>
-          I love capturing moments through the lens. Whether it's landscapes, street photography, 
-          or portraits, I enjoy exploring different perspectives and telling stories through images.
+          I'm passionate about road cycling and love exploring new routes. 
+          I've clocked almost <b>10,000 km</b> this year! Cycling is not just a hobby for me, I'm pushing myself to be better for every ride, chasing my power goal!
         </p>
       </div>
       <div className="hobby-item">
-        <h3>Reading</h3>
+        <h3>Honor of Kings</h3>
         <p>
-          An avid reader of both fiction and non-fiction. I particularly enjoy science fiction, 
-          technology books, and biographies. Reading helps me gain new perspectives and stay curious.
-        </p>
-      </div>
-      <div className="hobby-item">
-        <h3>Hiking</h3>
-        <p>
-          Exploring nature trails and mountains is one of my favorite ways to unwind. 
-          Hiking provides a great balance between physical activity and mental relaxation, 
-          and I always discover something new on each adventure.
-        </p>
-      </div>
-      <div className="hobby-item">
-        <h3>Cooking</h3>
-        <p>
-          Experimenting with different cuisines and recipes is a creative outlet for me. 
-          I enjoy trying new ingredients and techniques, and sharing meals with friends and family.
+          I enjoy playing Honor of Kings (王者荣耀), a strategic mobile MOBA game. It's a great way to unwind 
+          and challenge myself with. Lady Sun is my goto hero everytime!
         </p>
       </div>
     </div>
