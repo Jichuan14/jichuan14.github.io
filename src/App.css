@@ -8,6 +8,46 @@
   min-height: 100vh;
   background: #f8f9fa;
   padding: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Page transition animations */
+.app.page-enter {
+  animation: pageEnter 0.4s ease-out forwards;
+}
+
+.app.page-leave {
+  animation: pageLeave 0.2s ease-in forwards;
+}
+
+.welcome-container.page-enter {
+  animation: pageEnter 0.4s ease-out forwards;
+}
+
+.welcome-container.page-leave {
+  animation: pageLeave 0.2s ease-in forwards;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageLeave {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
 }
 
 /* Welcome Page Styles */
@@ -24,37 +64,72 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background-color: #f8f9fa;
   position: relative;
   padding: 2rem;
+  overflow: hidden;
+}
+
+.welcome-background-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.welcome-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
 }
 
 .welcome-spacer {
   height: 100vh;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .welcome-content {
   text-align: center;
   max-width: 800px;
+  position: absolute;
+  bottom: 25vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  padding: 0 2rem;
   animation: fadeInUp 0.8s ease-out;
+  will-change: opacity, transform;
+  z-index: 2;
 }
 
 .welcome-title {
   font-size: 4rem;
   font-weight: 700;
-  color: #000000;
+  color: #ffffff;
   margin-bottom: 1.5rem;
   letter-spacing: 2px;
   line-height: 1.2;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .welcome-subtitle {
   font-size: 1.5rem;
-  color: #666;
+  color: #f0f0f0;
   margin-bottom: 3rem;
   font-weight: 400;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .scroll-indicator {
@@ -68,9 +143,10 @@
 
 .scroll-indicator span {
   font-size: 0.9rem;
-  color: #999;
+  color: #e0e0e0;
   text-transform: uppercase;
   letter-spacing: 1px;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .scroll-indicator .scroll-arrow {
@@ -82,11 +158,11 @@
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateX(-50%) translateY(30px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
   }
 }
 

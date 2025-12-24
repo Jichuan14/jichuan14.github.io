@@ -10,6 +10,7 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(true)
   const [activeSection, setActiveSection] = useState('About Me')
   const [isAnimating, setIsAnimating] = useState(false)
+  const [pageTransition, setPageTransition] = useState(null) // 'entering' or 'leaving' for page transitions
   const contentRef = useRef(null)
   const welcomeRef = useRef(null)
   const scrollTimeoutRef = useRef(null)
@@ -66,13 +67,18 @@ function App() {
       
       // If scrolled down on welcome page, transition to main content
       if (scrollTop > 50 || (scrollTop + clientHeight >= scrollHeight - 10)) {
-        setShowWelcome(false)
-        // Reset scroll position for main content
+        setPageTransition('leaving')
         setTimeout(() => {
-          if (contentRef.current) {
-            contentRef.current.scrollTop = 0
-          }
-        }, 100)
+          setShowWelcome(false)
+          setPageTransition('entering')
+          setTimeout(() => {
+            setPageTransition(null)
+            // Reset scroll position for main content
+            if (contentRef.current) {
+              contentRef.current.scrollTop = 0
+            }
+          }, 400)
+        }, 200)
       }
     }
 
@@ -86,12 +92,17 @@ function App() {
       // If at bottom and scrolling down, or if content is not scrollable and scrolling down
       if (e.deltaY > 0 && (maxScroll <= 10 || scrollTop + clientHeight >= scrollHeight - 10)) {
         e.preventDefault()
-        setShowWelcome(false)
+        setPageTransition('leaving')
         setTimeout(() => {
-          if (contentRef.current) {
-            contentRef.current.scrollTop = 0
-          }
-        }, 100)
+          setShowWelcome(false)
+          setPageTransition('entering')
+          setTimeout(() => {
+            setPageTransition(null)
+            if (contentRef.current) {
+              contentRef.current.scrollTop = 0
+            }
+          }, 400)
+        }, 200)
       }
       // If at top and scrolling up, allow normal scrolling (stay on welcome page)
       // No need to prevent default, let it scroll normally
@@ -108,61 +119,6 @@ function App() {
     }
   }, [showWelcome])
 
-  // Handle page-level scroll to go back to welcome page
-  useEffect(() => {
-    if (showWelcome) return
-
-    let scrollAccumulator = 0
-    let lastWheelTime = 0
-    let lastSectionChangeTime = 0
-    const SCROLL_THRESHOLD = 120
-    const WHEEL_TIMEOUT = 300
-    const SECTION_CHANGE_COOLDOWN = 500
-
-    const handlePageWheel = (e) => {
-      if (showWelcome || activeSection !== 'About Me') return
-
-      const now = Date.now()
-      if (now - lastSectionChangeTime < SECTION_CHANGE_COOLDOWN) {
-        return
-      }
-
-      // Check if we're at the top of the page
-      const isAtPageTop = window.scrollY <= 10
-
-      // Scrolling up at the top of the page
-      if (e.deltaY < 0 && isAtPageTop) {
-        // Reset accumulator if too much time passed
-        if (now - lastWheelTime > WHEEL_TIMEOUT) {
-          scrollAccumulator = 0
-        }
-
-        scrollAccumulator += Math.abs(e.deltaY)
-        lastWheelTime = now
-
-        if (scrollAccumulator >= SCROLL_THRESHOLD) {
-          e.preventDefault()
-          scrollAccumulator = 0
-          lastWheelTime = 0
-          lastSectionChangeTime = now
-          setShowWelcome(true)
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-          setTimeout(() => {
-            if (welcomeRef.current) {
-              welcomeRef.current.scrollTop = 0
-            }
-          }, 100)
-        } else {
-          e.preventDefault()
-        }
-      }
-    }
-
-    window.addEventListener('wheel', handlePageWheel, { passive: false })
-    return () => {
-      window.removeEventListener('wheel', handlePageWheel)
-    }
-  }, [showWelcome, activeSection])
 
   // Reset scroll position when section changes
   useEffect(() => {
@@ -171,8 +127,10 @@ function App() {
     }
   }, [activeSection, showWelcome])
 
-  // Handle scroll detection - only trigger on deliberate wheel scrolling past boundaries
+  // Handle scroll detection - only trigger on deliberate wheel scrolling past boundaries (page-level)
   useEffect(() => {
+    if (showWelcome) return
+
     let isTransitioning = false
     let scrollAccumulator = 0
     let lastWheelTime = 0
@@ -183,8 +141,7 @@ function App() {
     const SECTION_CHANGE_COOLDOWN = 500 // Minimum time between section changes (ms)
 
     const handleWheel = (e) => {
-      const element = contentRef.current
-      if (!element || isTransitioning) return
+      if (isTransitioning) return
 
       const now = Date.now()
       // Prevent rapid section changes - require cooldown period
@@ -192,18 +149,21 @@ function App() {
         return
       }
 
-      const { scrollTop, scrollHeight, clientHeight } = element
-      const maxScroll = scrollHeight - clientHeight
-      const isContentScrollable = maxScroll > 10
+      // Check page-level scroll position
+      const scrollY = window.scrollY
+      const windowHeight = window.innerHeight
+      const documentHeight = document.documentElement.scrollHeight
+      const maxScroll = documentHeight - windowHeight
+      const isPageScrollable = maxScroll > 10
       
       // More lenient boundary detection - allow 10px margin
-      const isAtBottom = isContentScrollable ? (scrollTop + clientHeight >= scrollHeight - 10) : true
-      const isAtTop = isContentScrollable ? (scrollTop <= 10) : true
+      const isAtBottom = isPageScrollable ? (scrollY + windowHeight >= documentHeight - 10) : true
+      const isAtTop = scrollY <= 10
 
       // Scrolling down - check if we should go to next section
       if (e.deltaY > 0) {
-        // If content is scrollable, only trigger when at bottom
-        // If content is not scrollable, always allow scrolling down to next section
+        // If page is scrollable, only trigger when at bottom
+        // If page is not scrollable, always allow scrolling down to next section
         if (isAtBottom) {
           // Reset accumulator if too much time passed or scrolling direction changed
           if (now - lastWheelTime > WHEEL_TIMEOUT || lastScrollDirection === 'up') {
@@ -226,6 +186,7 @@ function App() {
               lastSectionChangeTime = now
               isTransitioning = true
               setIsAnimating(true)
+              window.scrollTo({ top: 0, behavior: 'smooth' })
               setTimeout(() => {
                 setActiveSection(next)
                 setTimeout(() => {
@@ -241,8 +202,8 @@ function App() {
             // Prevent default to show resistance, but don't switch yet
             e.preventDefault()
           }
-        } else if (isContentScrollable) {
-          // Normal scrolling within content - reset accumulator
+        } else {
+          // Normal scrolling within page - reset accumulator
           scrollAccumulator = 0
           lastWheelTime = 0
           lastScrollDirection = null
@@ -250,8 +211,7 @@ function App() {
       }
       // Scrolling up - check if we should go to previous section or back to welcome
       else if (e.deltaY < 0) {
-        // If content is scrollable, trigger when at or near top
-        // If content is not scrollable, always allow scrolling up to previous section
+        // Trigger when at or near top of page
         if (isAtTop) {
           // Check if we're on the first section - if so, go back to welcome page
           if (activeSection === 'About Me') {
@@ -272,14 +232,20 @@ function App() {
               lastScrollDirection = null
               lastSectionChangeTime = now
               isTransitioning = true
-              setShowWelcome(true)
+              setPageTransition('leaving')
               setTimeout(() => {
-                isTransitioning = false
-                // Reset welcome page scroll position
-                if (welcomeRef.current) {
-                  welcomeRef.current.scrollTop = 0
-                }
-              }, 300)
+                setShowWelcome(true)
+                setPageTransition('entering')
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+                setTimeout(() => {
+                  isTransitioning = false
+                  setPageTransition(null)
+                  // Reset welcome page scroll position
+                  if (welcomeRef.current) {
+                    welcomeRef.current.scrollTop = 0
+                  }
+                }, 400)
+              }, 200)
             } else {
               // Prevent default to show resistance, but don't switch yet
               e.preventDefault()
@@ -308,19 +274,12 @@ function App() {
                 lastSectionChangeTime = now
                 isTransitioning = true
                 setIsAnimating(true)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
                 setTimeout(() => {
                   setActiveSection(previous)
                   setTimeout(() => {
                     isTransitioning = false
                     setIsAnimating(false)
-                    // Set scroll to bottom of previous section if it's scrollable
-                    if (contentRef.current) {
-                      const prevElement = contentRef.current
-                      const prevMaxScroll = prevElement.scrollHeight - prevElement.clientHeight
-                      if (prevMaxScroll > 10) {
-                        prevElement.scrollTop = prevElement.scrollHeight
-                      }
-                    }
                   }, 300)
                 }, 150)
               } else {
@@ -332,8 +291,8 @@ function App() {
               e.preventDefault()
             }
           }
-        } else if (isContentScrollable) {
-          // Normal scrolling within content - reset accumulator
+        } else {
+          // Normal scrolling within page - reset accumulator
           scrollAccumulator = 0
           lastWheelTime = 0
           lastScrollDirection = null
@@ -341,12 +300,9 @@ function App() {
       }
     }
 
-    const contentElement = contentRef.current
-    if (contentElement && !showWelcome) {
-      contentElement.addEventListener('wheel', handleWheel, { passive: false })
-      return () => {
-        contentElement.removeEventListener('wheel', handleWheel)
-      }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => {
+      window.removeEventListener('wheel', handleWheel)
     }
   }, [activeSection, showWelcome])
 
@@ -381,7 +337,7 @@ function App() {
   if (showWelcome) {
     return (
       <div className="app">
-        <div className="welcome-container" ref={welcomeRef}>
+        <div className={`welcome-container ${pageTransition === 'entering' ? 'page-enter' : pageTransition === 'leaving' ? 'page-leave' : ''}`} ref={welcomeRef}>
           <Welcome onEnter={() => setShowWelcome(false)} />
         </div>
       </div>
@@ -389,7 +345,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${pageTransition === 'entering' ? 'page-enter' : pageTransition === 'leaving' ? 'page-leave' : ''}`}>
       <nav className="breadcrumb">
         {breadcrumbItems}
       </nav>
