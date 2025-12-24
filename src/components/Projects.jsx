@@ -1,4 +1,15 @@
+import { useState } from 'react'
+
 function Projects({ onNext, hasNext }) {
+  const [expandedProjects, setExpandedProjects] = useState({})
+
+  const toggleProject = (projectId) => {
+    setExpandedProjects(prev => ({
+      ...prev,
+      [projectId]: !prev[projectId]
+    }))
+  }
+
   return (
     <div className="projects">
       <h2>Projects</h2>
@@ -9,7 +20,14 @@ function Projects({ onNext, hasNext }) {
         <p className="project-description">
           Synthesis model utilizing machine learning to generate a realistic map trajectory dataset while strictly enforcing user-level differential privacy.
         </p>
-        <ul className="project-bullets">
+        <button 
+          className="expand-btn" 
+          onClick={() => toggleProject('trajectory')}
+          aria-expanded={expandedProjects['trajectory']}
+        >
+          {expandedProjects['trajectory'] ? 'Collapse Details' : 'Expand Details'}
+        </button>
+        <ul className={`project-bullets ${expandedProjects['trajectory'] ? 'expanded' : 'collapsed'}`}>
           <li>Employed OpenStreetMap and OSMnx for robust data cleaning and precise map matching of raw trajectory datasets.</li>
           <li>Developed and trained a dedicated generative model using NumPy and PyTorch to synthesize trajectory data, successfully preserving the original dataset's statistical trends and features.</li>
           <li>Built a user-level privacy framework using Opacus to monitor model updates and enforce differential privacy (DP), quantifying and protecting individual user data contributions.</li>
@@ -23,7 +41,14 @@ function Projects({ onNext, hasNext }) {
         <p className="project-description">
           A web application dedicated to managing internal Microsoft Power App ticket requests, significantly improving employee workflow.
         </p>
-        <ul className="project-bullets">
+        <button 
+          className="expand-btn" 
+          onClick={() => toggleProject('jj')}
+          aria-expanded={expandedProjects['jj']}
+        >
+          {expandedProjects['jj'] ? 'Collapse Details' : 'Expand Details'}
+        </button>
+        <ul className={`project-bullets ${expandedProjects['jj'] ? 'expanded' : 'collapsed'}`}>
           <li>Designed and deployed a robust MongoDB database, adhering strictly to conventional database design principles with 7 interconnected collections/tables and complex relational structures.</li>
           <li>Implemented an admin system that differentiate three different level of access controls for submitting, modifying and viewing tickets.</li>
           <li>Created and maintained backend API services using Express.js to satisfy all functional requirements, closely collaborating with the frontend team for seamless integration and user experience.</li>
@@ -38,7 +63,14 @@ function Projects({ onNext, hasNext }) {
         <p className="project-description">
           A student resource website designed to simplify course selection and satisfy HASS (Humanities, Arts, and Social Sciences) pathway requirements.
         </p>
-        <ul className="project-bullets">
+        <button 
+          className="expand-btn" 
+          onClick={() => toggleProject('hass')}
+          aria-expanded={expandedProjects['hass']}
+        >
+          {expandedProjects['hass'] ? 'Collapse Details' : 'Expand Details'}
+        </button>
+        <ul className={`project-bullets ${expandedProjects['hass'] ? 'expanded' : 'collapsed'}`}>
           <li>Utilized HTML/CSS and React to develop a precise front-end interface, strictly adhering to the provided design wireframe to clearly illustrate the HASS course system.</li>
           <li>Created an intuitive interface that successfully guides students through the selection process.</li>
           <li>Guided up to 400 students in selecting the appropriate HASS courses, directly contributing to smoother academic planning.</li>
