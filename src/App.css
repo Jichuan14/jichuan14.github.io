@@ -156,6 +156,30 @@
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
+.welcome-language-btn {
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  border: 2px solid #ffffff;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.welcome-language-btn:hover {
+  background: rgba(0, 0, 0, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.welcome-language-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 .scroll-indicator .scroll-arrow {
   font-size: 2rem;
   color: #FC4C02;
@@ -196,6 +220,7 @@
   text-align: center;
   margin: 3rem 0;
   padding: 0 2rem;
+  position: relative;
 }
 
 .name {
@@ -204,6 +229,38 @@
   color: #000000;
   margin-bottom: 2rem;
   letter-spacing: 2px;
+}
+
+.language-toggle-btn {
+  position: absolute;
+  top: 0;
+  right: 2rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 2px solid #FC4C02;
+  background: #ffffff;
+  color: #FC4C02;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.language-toggle-btn:hover {
+  background: #FC4C02;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.language-toggle-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .language-toggle-btn {
+    position: static;
+    margin-top: 1rem;
+  }
 }
 
 .breadcrumb {

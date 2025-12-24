@@ -11,11 +11,22 @@ function App() {
   const [activeSection, setActiveSection] = useState('About Me')
   const [isAnimating, setIsAnimating] = useState(false)
   const [pageTransition, setPageTransition] = useState(null) // 'entering' or 'leaving' for page transitions
+  const [language, setLanguage] = useState('en') // 'en' or 'zh'
   const contentRef = useRef(null)
   const welcomeRef = useRef(null)
   const scrollTimeoutRef = useRef(null)
 
   const sections = ['About Me', 'Education', 'Projects', 'Hobby']
+  const sectionLabels = {
+    'About Me': { en: 'About Me', zh: '关于我' },
+    Education: { en: 'Education', zh: '教育背景' },
+    Projects: { en: 'Projects', zh: '项目' },
+    Hobby: { en: 'Hobby', zh: '爱好' },
+  }
+
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'zh' : 'en')
+  }
 
   const getNextSection = (currentSection) => {
     const currentIndex = sections.indexOf(currentSection)
@@ -566,13 +577,13 @@ function App() {
     }
   }, [activeSection, showWelcome, getNextSection, getPreviousSection])
 
-  const breadcrumbItems = sections.map((section, index) => (
+  const breadcrumbItems = sections.map((section) => (
     <span key={section}>
       <button
         className={`breadcrumb-item ${activeSection === section ? 'active' : ''}`}
         onClick={() => handleSectionChange(section)}
       >
-        {section}
+        {sectionLabels[section]?.[language] || section}
       </button>
     </span>
   ))
@@ -581,23 +592,36 @@ function App() {
     const hasNext = getNextSection(activeSection) !== null
     switch (activeSection) {
       case 'About Me':
-        return <AboutMe onNext={goToNextSection} hasNext={hasNext} />
+        return <AboutMe onNext={goToNextSection} hasNext={hasNext} language={language} />
       case 'Education':
-        return <Education onNext={goToNextSection} hasNext={hasNext} />
+        return <Education onNext={goToNextSection} hasNext={hasNext} language={language} />
       case 'Projects':
-        return <Projects onNext={goToNextSection} hasNext={hasNext} />
+        return <Projects onNext={goToNextSection} hasNext={hasNext} language={language} />
       case 'Hobby':
-        return <Hobby onNext={goToNextSection} hasNext={hasNext} />
+        return <Hobby onNext={goToNextSection} hasNext={hasNext} language={language} />
       default:
-        return <AboutMe onNext={goToNextSection} hasNext={hasNext} />
+        return <AboutMe onNext={goToNextSection} hasNext={hasNext} language={language} />
     }
   }
 
   if (showWelcome) {
     return (
       <div className="app">
-        <div className={`welcome-container ${pageTransition === 'entering' ? 'page-enter' : pageTransition === 'leaving' ? 'page-leave' : ''}`} ref={welcomeRef}>
-          <Welcome onEnter={() => setShowWelcome(false)} />
+        <div
+          className={`welcome-container ${
+            pageTransition === 'entering'
+              ? 'page-enter'
+              : pageTransition === 'leaving'
+              ? 'page-leave'
+              : ''
+          }`}
+          ref={welcomeRef}
+        >
+          <Welcome
+            onEnter={() => setShowWelcome(false)}
+            language={language}
+            onToggleLanguage={toggleLanguage}
+          />
         </div>
       </div>
     )
@@ -609,7 +633,14 @@ function App() {
         {breadcrumbItems}
       </nav>
       <header className="header">
-        <h1 className="name">Jichuan Wu</h1>
+        <h1 className="name">吴季川</h1>
+        <button
+          className="language-toggle-btn"
+          onClick={toggleLanguage}
+          aria-label={language === 'en' ? 'Switch to Chinese' : 'Switch to English'}
+        >
+          {language === 'en' ? '中文' : 'EN'}
+        </button>
       </header>
       
       <div className="content-wrapper">
@@ -618,7 +649,7 @@ function App() {
             {renderSection()}
           </div>
           <footer className="social-footer">
-            <span className="social-label">Connect with me:</span>
+            <span className="social-label">{language === 'en' ? 'Connect with me:' : '联系我：'}</span>
             <a
               href="https://www.linkedin.com/in/jichuanwu/"
               target="_blank"
