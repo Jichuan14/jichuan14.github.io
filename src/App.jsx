@@ -633,7 +633,7 @@ function App() {
         {breadcrumbItems}
       </nav>
       <header className="header">
-        <h1 className="name">吴季川</h1>
+        <h1 className="name">{language === 'en' ? 'Jichuan Wu' : '吴季川'}</h1>
         <button
           className="language-toggle-btn"
           onClick={toggleLanguage}
