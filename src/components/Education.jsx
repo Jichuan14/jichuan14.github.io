@@ -3,22 +3,24 @@ function Education({ onNext, hasNext }) {
     <div className="education">
       <h2>Education</h2>
       <div className="education-item">
-        <h3>University Name</h3>
-        <p className="degree">Bachelor of Science in Computer Science</p>
-        <p className="period">2018 - 2022</p>
+        <h3>University of California, Irvine</h3>
+        <p className="location">Irvine, California</p>
+        <p className="degree">Master of Data Science</p>
+        <p className="period">Expected December 2026</p>
         <p>
-          Studied various aspects of computer science including algorithms, data structures, 
-          software engineering, and database management. Participated in multiple group projects 
-          and research initiatives.
+          Currently pursuing advanced studies in data science, machine learning, and artificial intelligence. 
+          Focused on developing expertise in data analysis, statistical modeling, and predictive analytics.
         </p>
       </div>
       <div className="education-item">
-        <h3>High School</h3>
-        <p className="degree">High School Diploma</p>
-        <p className="period">2014 - 2018</p>
+        <h3>Rensselaer Polytechnic Institute</h3>
+        <p className="location">Troy, New York</p>
+        <p className="degree">B.S., Information Technology & Web Science</p>
+        <p className="period">2021 - 2024</p>
         <p>
-          Focused on mathematics and science courses. Active member of the robotics club 
-          and participated in several coding competitions.
+          Graduated with a degree in Information Technology and Web Science, a program ranked #1 nationwide 
+          by College Choice in 2017. Gained comprehensive knowledge in web development, database systems, 
+          algorithms, and software engineering through rigorous coursework and hands-on projects.
         </p>
       </div>
       {hasNext && (
