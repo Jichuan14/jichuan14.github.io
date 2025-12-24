@@ -314,7 +314,6 @@ function App() {
       >
         {section}
       </button>
-      {index < sections.length - 1 && <span className="breadcrumb-separator"> / </span>}
     </span>
   ))
 
